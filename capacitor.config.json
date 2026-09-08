@@ -1,0 +1,13 @@
+{
+  "appId": "com.pwasimulator.app",
+  "appName": "PWA Simulator",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Browser": {
+      "presentationStyle": "popover"
+    }
+  }
+}

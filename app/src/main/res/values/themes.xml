@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.PWASimulator" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Customize your theme here -->
+    </style>
+</resources>
