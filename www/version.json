@@ -1,0 +1,7 @@
+{
+  "latest_version": "0.1",
+  "min_version": "0.1",
+  "apk_url": "https://github.com/Alexorim/PWA_Simulator/releases/download/v0.1/PWASimulator-v0.1.apk",
+  "release_notes": "Versión inicial de PWA Simulator para Android.",
+  "force_update": false
+}

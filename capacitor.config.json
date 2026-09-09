@@ -8,6 +8,8 @@
   "plugins": {
     "Browser": {
       "presentationStyle": "popover"
-    }
+    },
+    "App": {},
+    "Filesystem": {}
   }
 }
