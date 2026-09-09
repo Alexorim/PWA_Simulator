@@ -11,23 +11,24 @@
     <div id="mainView" class="container">
         <header class="app-header">
             <div class="logo-title">
-                <span class="icon">🚀</span>
+                <span class="icon">⚡</span>
                 <h1>PWA Simulator</h1>
             </div>
+            <p class="subtitle">Simula y ejecuta cualquier sitio web en modo Progressive Web App</p>
         </header>
 
         <main class="content">
             <!-- URL Form Card -->
             <section class="card">
-                <h2>Abrir sitio web o PWA</h2>
+                <h2>Ingresa una URL</h2>
                 <form id="urlForm">
                     <div class="input-group">
                         <span class="input-icon">🌐</span>
-                        <input type="url" id="urlInput" placeholder="ej. google.com o https://app.example.com" required autocomplete="off">
+                        <input type="url" id="urlInput" placeholder="ej. twitter.com o https://github.com" required autocomplete="off">
                     </div>
                     <div class="button-group">
                         <button type="submit" class="btn btn-primary">
-                            <span>▶</span> Ejecutar como PWA
+                            <span>▶</span> Abrir como PWA
                         </button>
                     </div>
                 </form>
@@ -36,7 +37,7 @@
             <!-- History Section -->
             <section class="history-section">
                 <div class="section-header">
-                    <h3>Historial Reciente</h3>
+                    <h3>Sitios Recientes</h3>
                     <button id="clearHistoryBtn" class="btn-text danger-text hidden">Limpiar todo</button>
                 </div>
                 <div id="historyList" class="history-list">
@@ -46,13 +47,20 @@
         </main>
     </div>
 
-    <!-- Embedded In-App PWA Viewer (Fallback / Optional) -->
+    <!-- Embedded In-App PWA Viewer -->
     <div id="pwaViewer" class="pwa-viewer hidden">
         <div class="viewer-header">
             <span id="viewerTitle" class="viewer-url">Cargando...</span>
-            <button id="closeViewerBtn" class="btn-icon">✕</button>
+            <div class="viewer-actions">
+                <button id="openExternalBtn" class="btn-icon" title="Abrir en ventana independiente (PWA)">↗</button>
+                <button id="closeViewerBtn" class="btn-icon" title="Cerrar">✕</button>
+            </div>
         </div>
-        <iframe id="pwaIframe" src="" frameborder="0"></iframe>
+        <div id="iframeNotice" class="iframe-notice">
+            <span>💡 Si la página no carga aquí (protección X-Frame del sitio),</span>
+            <button id="noticeOpenBtn" class="notice-link">ábrela en ventana PWA ↗</button>
+        </div>
+        <iframe id="pwaIframe" src="" frameborder="0" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
     </div>
 
     <script src="js/app.js"></script>

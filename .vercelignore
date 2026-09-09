@@ -1,0 +1,19 @@
+# Python desktop files (prevent Vercel from detecting main.py as a serverless function)
+*.py
+requirements.txt
+*.spec
+*.bat
+*.vbs
+assets/
+icon.ico
+
+# Android / Gradle
+android/
+app/
+gradle/
+gradlew
+gradlew.bat
+build.gradle.kts
+settings.gradle.kts
+gradle.properties
+capacitor.config.json

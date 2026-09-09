@@ -7,8 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const pwaIframe = document.getElementById('pwaIframe');
     const viewerTitle = document.getElementById('viewerTitle');
     const closeViewerBtn = document.getElementById('closeViewerBtn');
+    const openExternalBtn = document.getElementById('openExternalBtn');
+    const noticeOpenBtn = document.getElementById('noticeOpenBtn');
 
     const STORAGE_KEY = 'pwa_simulator_history';
+    let currentUrl = '';
 
     // Load initial history
     let history = loadHistory();
@@ -36,6 +39,30 @@ document.addEventListener('DOMContentLoaded', () => {
     closeViewerBtn.addEventListener('click', () => {
         pwaViewer.classList.add('hidden');
         pwaIframe.src = '';
+        currentUrl = '';
+    });
+
+    // Open in standalone popup window
+    function openInStandaloneWindow(url) {
+        const width = 1024;
+        const height = 768;
+        const left = Math.max(0, (window.screen.width - width) / 2);
+        const top = Math.max(0, (window.screen.height - height) / 2);
+
+        const features = `popup=yes,width=${width},height=${height},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`;
+        return window.open(url, '_blank', features);
+    }
+
+    openExternalBtn.addEventListener('click', () => {
+        if (currentUrl) {
+            openInStandaloneWindow(currentUrl);
+        }
+    });
+
+    noticeOpenBtn.addEventListener('click', () => {
+        if (currentUrl) {
+            openInStandaloneWindow(currentUrl);
+        }
     });
 
     // Helper Functions
@@ -124,13 +151,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openUrl(url) {
-        // Check if Capacitor Browser Plugin is available
+        currentUrl = url;
+
+        // 1. Capacitor Nativo (Android/iOS)
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
             window.Capacitor.Plugins.Browser.open({ url: url });
+            return;
         } else if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
             window.open(url, '_system');
-        } else {
-            // Fallback for local web testing or iframe mode
+            return;
+        }
+
+        // 2. Modo Web / Vercel:
+        // Intentar abrir como popup PWA independiente
+        const popup = openInStandaloneWindow(url);
+
+        // Si el navegador bloqueó el popup o está en dispositivo táctil, abrir en el visor embebido
+        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
             viewerTitle.textContent = url;
             pwaIframe.src = url;
             pwaViewer.classList.remove('hidden');

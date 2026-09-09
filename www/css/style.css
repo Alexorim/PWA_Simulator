@@ -1,13 +1,13 @@
 :root {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --card-border: #2c2c2c;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --primary-color: #bb86fc;
-    --primary-hover: #9955e8;
-    --danger-color: #cf6679;
-    --border-radius: 12px;
+    --bg-color: #0D0D0D;
+    --card-bg: #1A1A1A;
+    --card-border: #2A2A2A;
+    --text-primary: #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --danger-color: #EF4444;
+    --border-radius: 14px;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -30,14 +30,14 @@ body {
 }
 
 .container {
-    padding: 16px;
-    max-width: 600px;
+    padding: 24px 16px;
+    max-width: 540px;
     margin: 0 auto;
     width: 100%;
 }
 
 .app-header {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     text-align: center;
 }
 
@@ -49,26 +49,34 @@ body {
 }
 
 .logo-title .icon {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
 }
 
 .logo-title h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
 }
 
 .card {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 22px;
     margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .card h2 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
     margin-bottom: 16px;
     color: var(--text-primary);
 }
@@ -76,11 +84,12 @@ body {
 .input-group {
     display: flex;
     align-items: center;
-    background-color: #2a2a2a;
-    border: 1px solid #3d3d3d;
-    border-radius: 8px;
-    padding: 10px 14px;
+    background-color: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 12px 14px;
     margin-bottom: 16px;
+    transition: border-color 0.2s;
 }
 
 .input-group:focus-within {
@@ -101,11 +110,15 @@ body {
     outline: none;
 }
 
+.input-group input::placeholder {
+    color: #6B7280;
+}
+
 .btn {
     width: 100%;
     padding: 14px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -113,16 +126,20 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
-    color: #000;
+    color: #FFFFFF;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
 }
 
 .btn-primary:active {
-    background-color: var(--primary-hover);
+    transform: scale(0.98);
 }
 
 .history-section {
@@ -133,17 +150,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    padding: 0 4px;
 }
 
 .section-header h3 {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
 }
 
 .btn-text {
     background: none;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
     padding: 4px 8px;
 }
@@ -155,14 +177,14 @@ body {
 .history-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .history-item {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 10px;
-    padding: 12px 16px;
+    padding: 12px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -170,8 +192,8 @@ body {
     transition: background-color 0.2s;
 }
 
-.history-item:active {
-    background-color: #2a2a2a;
+.history-item:hover, .history-item:active {
+    background-color: #242424;
 }
 
 .history-info {
@@ -195,10 +217,13 @@ body {
     font-size: 1.1rem;
     padding: 6px;
     cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.2s, background-color 0.2s;
 }
 
-.btn-icon:hover, .btn-icon:active {
-    color: var(--danger-color);
+.btn-icon:hover {
+    color: #fff;
+    background-color: #333;
 }
 
 .empty-state {
@@ -227,12 +252,18 @@ body {
 
 .viewer-header {
     height: 48px;
-    background-color: #1e1e1e;
+    background-color: #1A1A1A;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #2A2A2A;
+}
+
+.viewer-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .viewer-url {
@@ -241,7 +272,28 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80%;
+    max-width: 75%;
+}
+
+.iframe-notice {
+    background-color: #1E293B;
+    color: #94A3B8;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #334155;
+}
+
+.notice-link {
+    background: none;
+    border: none;
+    color: #38BDF8;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 .pwa-viewer iframe {
@@ -249,4 +301,5 @@ body {
     width: 100%;
     height: 100%;
     border: none;
+    background-color: #fff;
 }
