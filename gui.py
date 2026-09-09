@@ -449,26 +449,56 @@ class PWASimulatorApp(ctk.CTk):
             del_btn.pack(side="right", padx=(2, 0))
 
     def _install_pwa_shortcut(self, url: str, title: str):
-        """Crea un acceso directo .lnk o script en el escritorio para lanzar la página como PWA independiente."""
+        """Crea un acceso directo .lnk en el escritorio de Windows para lanzar la página como PWA independiente."""
         try:
-            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+            import subprocess
             clean_title = "".join(c for c in (title or urlparse(url).netloc) if c.isalnum() or c in (' ', '_', '-')).strip()
             if not clean_title:
                 clean_title = "PWA"
 
-            vbs_path = os.path.join(desktop, f"{clean_title}.vbs")
-            python_exe = sys.executable
-            main_py = os.path.abspath(os.path.join(os.path.dirname(__file__), "main.py"))
+            python_exe = sys.executable.replace('/', '\\')
+            main_py = os.path.abspath(os.path.join(os.path.dirname(__file__), "main.py")).replace('/', '\\')
+            icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "icon.ico")).replace('/', '\\')
+            base_dir = os.path.dirname(os.path.abspath(__file__)).replace('/', '\\')
 
-            # Crear VBS launcher silencioso en el escritorio que abre la URL directamente en PWA Simulator
-            vbs_content = f'CreateObject("WScript.Shell").Run "\"{python_exe}\" \"{main_py}\" \"{url}\"", 0, False'
-            with open(vbs_path, "w", encoding="utf-8") as f:
-                f.write(vbs_content)
+            # Script VBS para obtener de forma 100% fiable el escritorio real (incluso si está en OneDrive)
+            # y generar un archivo de acceso directo .lnk profesional
+            vbs_script = f'''
+Set oWS = CreateObject("WScript.Shell")
+sDesk = oWS.SpecialFolders("Desktop")
+If sDesk = "" Then
+    sDesk = oWS.ExpandEnvironmentStrings("%USERPROFILE%") & "\\Desktop"
+End If
 
-            self.status_label.configure(
-                text=f"✓ Acceso PWA '{clean_title}.vbs' creado en tu Escritorio",
-                text_color=SUCCESS_COLOR
-            )
+sLinkFile = sDesk & "\\{clean_title}.lnk"
+Set oLink = oWS.CreateShortcut(sLinkFile)
+oLink.TargetPath = "{python_exe}"
+oLink.Arguments = Chr(34) & "{main_py}" & Chr(34) & " " & Chr(34) & "{url}" & Chr(34)
+oLink.WorkingDirectory = "{base_dir}"
+If oWS.CreateObject("Scripting.FileSystemObject").FileExists("{icon_path}") Then
+    oLink.IconLocation = "{icon_path},0"
+End If
+oLink.Description = "PWA - {clean_title}"
+oLink.WindowStyle = 1
+oLink.Save
+'''
+            temp_vbs = os.path.join(os.environ.get("TEMP", "C:\\Temp"), f"create_pwa_{clean_title}.vbs")
+            with open(temp_vbs, "w", encoding="utf-8") as f:
+                f.write(vbs_script.strip())
+
+            result = subprocess.run(["cscript", "//Nologo", temp_vbs], capture_output=True, text=True)
+            try:
+                os.remove(temp_vbs)
+            except Exception:
+                pass
+
+            if result.returncode == 0:
+                self.status_label.configure(
+                    text=f"✓ Acceso PWA '{clean_title}.lnk' creado en tu Escritorio",
+                    text_color=SUCCESS_COLOR
+                )
+            else:
+                self._show_error(f"Error al generar acceso: {result.stderr or result.stdout}")
         except Exception as e:
             self._show_error(f"Error al crear acceso directo: {e}")
 
