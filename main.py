@@ -37,6 +37,11 @@ application = handler
 def main():
     from gui import PWASimulatorApp
     gui_app = PWASimulatorApp()
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
+        initial_url = sys.argv[1]
+        gui_app.url_entry.delete(0, "end")
+        gui_app.url_entry.insert(0, initial_url)
+        gui_app.after(500, lambda: gui_app._load_url(initial_url))
     gui_app.mainloop()
 
 if __name__ == "__main__":

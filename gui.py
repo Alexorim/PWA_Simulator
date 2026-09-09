@@ -1,13 +1,19 @@
 """
 gui.py - Interfaz gráfica moderna para PWA Simulator en CustomTkinter
+Incluye fondo de Red Neuronal animada en Tkinter Canvas, animación en el Logo,
+botón de instalación rápida (Acceso directo PWA en Windows) en cada elemento del historial,
+y visor embebido con menú flotante de controles y herramientas de desarrollo.
 """
 import os
 import sys
+import math
+import random
 import threading
 from urllib.parse import urlparse
 from typing import Optional
 
 import customtkinter as ctk
+import tkinter as tk
 from PIL import Image
 
 from config import (
@@ -37,7 +43,7 @@ class PWASimulatorApp(ctk.CTk):
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}")
 
         self.configure(fg_color=BG_COLOR)
-        self.minsize(720, 520)
+        self.minsize(740, 560)
         self.resizable(True, True)
 
         # Configurar icono de ventana
@@ -48,31 +54,48 @@ class PWASimulatorApp(ctk.CTk):
             except Exception:
                 pass
 
+        # Variables para animación de red neuronal
+        self.nodes = []
+        self.anim_running = True
+        self.logo_angle = 0
+        self.logo_pulse = 0
+
+        self._setup_background_canvas()
         self._create_widgets()
+        self._init_neural_network()
+        self._start_animations()
+
+    def _setup_background_canvas(self):
+        """Crea el canvas de fondo para la red neuronal interactiva."""
+        self.canvas = tk.Canvas(self, bg=BG_COLOR, highlightthickness=0)
+        self.canvas.place(x=0, y=0, relwidth=1, relheight=1)
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
+
+    def _on_canvas_resize(self, event):
+        self.canvas_width = event.width
+        self.canvas_height = event.height
 
     def _create_widgets(self):
-        # Contenedor principal con scroll o centrado
+        # Contenedor principal superpuesto sobre el canvas
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_container.pack(expand=True, fill="both", padx=30, pady=20)
+        self.main_container.pack(expand=True, fill="both", padx=36, pady=20)
 
-        # Espaciador superior
-        self.top_spacer = ctk.CTkFrame(self.main_container, fg_color="transparent", height=10)
-        self.top_spacer.pack(side="top", fill="x")
-
-        # 1. Logo y Título
+        # 1. Logo animado y Título
         self.header_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        self.header_frame.pack(side="top", fill="x", pady=(10, 15))
+        self.header_frame.pack(side="top", fill="x", pady=(5, 12))
 
         logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo.png")
         if os.path.exists(logo_path):
             try:
-                pil_logo = Image.open(logo_path)
-                logo_img = ctk.CTkImage(light_image=pil_logo, dark_image=pil_logo, size=(110, 110))
-                self.logo_label = ctk.CTkLabel(self.header_frame, image=logo_img, text="")
+                self.pil_logo = Image.open(logo_path).convert("RGBA")
+                self.logo_img = ctk.CTkImage(light_image=self.pil_logo, dark_image=self.pil_logo, size=(105, 105))
+                self.logo_label = ctk.CTkLabel(self.header_frame, image=self.logo_img, text="")
             except Exception:
-                self.logo_label = ctk.CTkLabel(self.header_frame, text="⚡", font=("Segoe UI", 64))
+                self.pil_logo = None
+                self.logo_label = ctk.CTkLabel(self.header_frame, text="⚡", font=("Segoe UI", 60))
         else:
-            self.logo_label = ctk.CTkLabel(self.header_frame, text="⚡", font=("Segoe UI", 64))
+            self.pil_logo = None
+            self.logo_label = ctk.CTkLabel(self.header_frame, text="⚡", font=("Segoe UI", 60))
 
         self.logo_label.pack(anchor="center")
 
@@ -82,37 +105,43 @@ class PWASimulatorApp(ctk.CTk):
             font=("Segoe UI", 26, "bold"),
             text_color=TEXT_COLOR
         )
-        self.title_label.pack(anchor="center", pady=(8, 2))
+        self.title_label.pack(anchor="center", pady=(6, 2))
 
         self.subtitle_label = ctk.CTkLabel(
             self.header_frame,
-            text="Visualiza cualquier sitio web como Progressive Web App independiente",
-            font=("Segoe UI", 13),
+            text="Simula, instala y ejecuta cualquier sitio web en modo Progressive Web App",
+            font=("Segoe UI", 12),
             text_color=TEXT_SECONDARY
         )
         self.subtitle_label.pack(anchor="center")
 
         # 2. Entrada de URL
-        self.input_card = ctk.CTkFrame(self.main_container, fg_color=BG_SECONDARY, corner_radius=16, border_width=1, border_color=BG_TERTIARY)
-        self.input_card.pack(side="top", fill="x", padx=40, pady=15)
+        self.input_card = ctk.CTkFrame(
+            self.main_container,
+            fg_color=BG_SECONDARY,
+            corner_radius=14,
+            border_width=1,
+            border_color=BG_TERTIARY
+        )
+        self.input_card.pack(side="top", fill="x", padx=30, pady=12)
 
         self.input_inner = ctk.CTkFrame(self.input_card, fg_color="transparent")
-        self.input_inner.pack(fill="x", padx=16, pady=14)
+        self.input_inner.pack(fill="x", padx=14, pady=12)
 
-        self.url_icon = ctk.CTkLabel(self.input_inner, text="🌐", font=("Segoe UI", 16))
-        self.url_icon.pack(side="left", padx=(0, 10))
+        self.url_icon = ctk.CTkLabel(self.input_inner, text="🌐", font=("Segoe UI", 15))
+        self.url_icon.pack(side="left", padx=(0, 8))
 
         self.url_entry = ctk.CTkEntry(
             self.input_inner,
-            placeholder_text="https://ejemplo.com o ingresa un dominio...",
-            height=44,
-            corner_radius=10,
-            font=("Segoe UI", 14),
+            placeholder_text="https://ejemplo.com o ingresa una dirección...",
+            height=42,
+            corner_radius=8,
+            font=("Segoe UI", 13),
             border_width=0,
-            fg_color="#121212",
+            fg_color="#111113",
             text_color=TEXT_COLOR
         )
-        self.url_entry.pack(side="left", fill="x", expand=True, padx=(0, 12))
+        self.url_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.url_entry.bind("<Return>", self._on_submit)
         self.url_entry.focus_set()
 
@@ -121,8 +150,8 @@ class PWASimulatorApp(ctk.CTk):
             text="Abrir PWA",
             font=("Segoe UI", 13, "bold"),
             width=110,
-            height=44,
-            corner_radius=10,
+            height=42,
+            corner_radius=8,
             fg_color=ACCENT_COLOR,
             hover_color=ACCENT_HOVER,
             command=self._on_submit
@@ -130,10 +159,10 @@ class PWASimulatorApp(ctk.CTk):
         self.submit_btn.pack(side="right")
 
         # 3. Estado y barra de carga
-        self.status_frame = ctk.CTkFrame(self.main_container, fg_color="transparent", height=30)
-        self.status_frame.pack(side="top", fill="x", pady=(2, 10))
+        self.status_frame = ctk.CTkFrame(self.main_container, fg_color="transparent", height=28)
+        self.status_frame.pack(side="top", fill="x", pady=(2, 6))
 
-        self.progress_bar = ctk.CTkProgressBar(self.status_frame, mode="indeterminate", width=260, height=4)
+        self.progress_bar = ctk.CTkProgressBar(self.status_frame, mode="indeterminate", width=240, height=3)
         self.progress_bar.set(0)
 
         self.status_label = ctk.CTkLabel(self.status_frame, text="", font=("Segoe UI", 12))
@@ -141,7 +170,7 @@ class PWASimulatorApp(ctk.CTk):
 
         # 4. Sección de Historial
         self.history_header_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        self.history_header_frame.pack(side="top", fill="x", padx=45, pady=(5, 5))
+        self.history_header_frame.pack(side="top", fill="x", padx=35, pady=(4, 4))
 
         self.history_title = ctk.CTkLabel(
             self.history_header_frame,
@@ -153,9 +182,9 @@ class PWASimulatorApp(ctk.CTk):
 
         self.clear_btn = ctk.CTkButton(
             self.history_header_frame,
-            text="Limpiar",
+            text="Limpiar todo",
             font=("Segoe UI", 11),
-            width=60,
+            width=70,
             height=24,
             corner_radius=6,
             fg_color="transparent",
@@ -165,27 +194,102 @@ class PWASimulatorApp(ctk.CTk):
         )
         self.clear_btn.pack(side="right")
 
-        # Scrollable frame para lista de historial
+        # Scrollable frame para historial
         self.history_scroll = ctk.CTkScrollableFrame(
             self.main_container,
             fg_color=BG_SECONDARY,
             corner_radius=12,
-            height=140,
+            height=150,
             border_width=1,
             border_color=BG_TERTIARY
         )
-        self.history_scroll.pack(side="top", fill="both", expand=True, padx=40, pady=(0, 10))
+        self.history_scroll.pack(side="top", fill="both", expand=True, padx=30, pady=(0, 8))
 
         self._refresh_history()
 
-        # 5. Footer con versión
+        # 5. Footer con créditos y estado
         self.footer_label = ctk.CTkLabel(
             self.main_container,
-            text=f"{APP_NAME} • Simulación nativa PWA con Edge WebView2",
+            text=f"{APP_NAME} v{APP_VERSION} • Simulación nativa PWA (Edge Chromium) • F12 para DevTools",
             font=("Segoe UI", 10),
             text_color="#4B5563"
         )
-        self.footer_label.pack(side="bottom", pady=4)
+        self.footer_label.pack(side="bottom", pady=2)
+
+    def _init_neural_network(self):
+        """Inicializa los nodos de la red neuronal animada."""
+        self.canvas_width = WINDOW_WIDTH
+        self.canvas_height = WINDOW_HEIGHT
+        self.node_count = 38
+        self.nodes = []
+
+        for _ in range(self.node_count):
+            self.nodes.append({
+                "x": random.uniform(0, self.canvas_width),
+                "y": random.uniform(0, self.canvas_height),
+                "vx": random.uniform(-0.4, 0.4),
+                "vy": random.uniform(-0.4, 0.4),
+                "radius": random.uniform(1.5, 3.0),
+                "pulse": random.uniform(0, math.pi * 2),
+                "speed": random.uniform(0.03, 0.06)
+            })
+
+    def _start_animations(self):
+        """Ciclo de renderizado de la animación de red neuronal y logo."""
+        if not self.anim_running:
+            return
+
+        try:
+            self.canvas.delete("all")
+            w = max(self.canvas.winfo_width(), 100)
+            h = max(self.canvas.winfo_height(), 100)
+
+            # Actualizar y dibujar nodos
+            max_dist = 115
+            for i, n in enumerate(self.nodes):
+                n["x"] += n["vx"]
+                n["y"] += n["vy"]
+                n["pulse"] += n["speed"]
+
+                if n["x"] < 0 or n["x"] > w:
+                    n["vx"] *= -1
+                if n["y"] < 0 or n["y"] > h:
+                    n["vy"] *= -1
+
+                # Conexiones sinápticas
+                for j in range(i + 1, len(self.nodes)):
+                    n2 = self.nodes[j]
+                    dx = n["x"] - n2["x"]
+                    dy = n["y"] - n2["y"]
+                    dist = math.sqrt(dx * dx + dy * dy)
+
+                    if dist < max_dist:
+                        # Intensidad de azul según distancia
+                        alpha = int((1 - dist / max_dist) * 45)
+                        hex_alpha = f"#{alpha:02x}{alpha*2:02x}{min(255, alpha*5):02x}"
+                        self.canvas.create_line(
+                            n["x"], n["y"], n2["x"], n2["y"],
+                            fill="#1E3A8A", width=1
+                        )
+
+                # Dibujar nodo
+                r = n["radius"] + math.sin(n["pulse"]) * 0.7
+                self.canvas.create_oval(
+                    n["x"] - r, n["y"] - r, n["x"] + r, n["y"] + r,
+                    fill="#3B82F6", outline="#60A5FA", width=1
+                )
+
+            # Animación ligera en el logo
+            self.logo_pulse += 0.05
+            if not self.pil_logo:
+                glow_chars = ["⚡", "✨", "⚡", "⚡"]
+                char_idx = int(self.logo_pulse * 1.5) % len(glow_chars)
+                self.logo_label.configure(text=glow_chars[char_idx])
+        except Exception:
+            pass
+
+        # Continuar loop a ~30 FPS
+        self.after(33, self._start_animations)
 
     def _on_submit(self, event=None):
         url = self.url_entry.get().strip()
@@ -199,7 +303,7 @@ class PWASimulatorApp(ctk.CTk):
         self._load_url(url)
 
     def _load_url(self, url: str):
-        self.status_label.configure(text="Detectando PWA y metadatos del sitio...", text_color=TEXT_SECONDARY)
+        self.status_label.configure(text="Detectando PWA y preparando simulación...", text_color=TEXT_SECONDARY)
         self.progress_bar.pack(anchor="center", pady=(0, 6))
         self.progress_bar.start()
 
@@ -222,7 +326,6 @@ class PWASimulatorApp(ctk.CTk):
                 target_url = url
                 is_real_pwa = False
 
-            # Buscar mejor icono
             icon_path = get_best_icon(pwa_result.icons)
             if not icon_path:
                 domain = urlparse(url).netloc
@@ -233,7 +336,6 @@ class PWASimulatorApp(ctk.CTk):
 
             self.after(0, lambda: self._launch_webview(target_url, manifest, icon_path, is_real_pwa))
         except Exception as e:
-            # Fallback de emergencia: si algo falla en el scraper, abrir de todas formas
             try:
                 domain = urlparse(url).netloc or url
                 fallback_manifest = {
@@ -253,16 +355,14 @@ class PWASimulatorApp(ctk.CTk):
         self.progress_bar.pack_forget()
 
         if is_real_pwa:
-            self.status_label.configure(text="PWA nativa detectada ✓ — Iniciando...", text_color=SUCCESS_COLOR)
+            self.status_label.configure(text="PWA nativa detectada ✓ — Abriendo...", text_color=SUCCESS_COLOR)
         else:
-            self.status_label.configure(text="Modo PWA simulado — Iniciando...", text_color=WARNING_COLOR)
+            self.status_label.configure(text="Modo PWA simulado — Abriendo...", text_color=WARNING_COLOR)
 
-        # Ocultar la ventana principal mientras la PWA esté en ejecución
         self.withdraw()
         open_as_pwa(url, manifest, icon_path, on_close=self._on_webview_close)
 
     def _on_webview_close(self):
-        # Al cerrarse la ventana de la PWA, restaurar de forma segura en el hilo de Tkinter
         self.after(0, self._restore_main_window)
 
     def _restore_main_window(self):
@@ -304,10 +404,10 @@ class PWASimulatorApp(ctk.CTk):
             item_frame.pack(fill="x", pady=2, padx=4)
 
             display_title = entry.title if entry.title else entry.url
-            if len(display_title) > 50:
-                display_title = display_title[:47] + "..."
+            if len(display_title) > 42:
+                display_title = display_title[:39] + "..."
 
-            # Botón para abrir el sitio
+            # Botón principal para abrir el sitio
             btn = ctk.CTkButton(
                 item_frame,
                 text=f"🌐  {display_title}",
@@ -320,19 +420,57 @@ class PWASimulatorApp(ctk.CTk):
             )
             btn.pack(side="left", fill="x", expand=True)
 
+            # Botón para instalar PWA (Acceso directo en Windows)
+            install_btn = ctk.CTkButton(
+                item_frame,
+                text="📥 Instalar",
+                width=75,
+                height=26,
+                font=("Segoe UI", 11, "bold"),
+                fg_color="transparent",
+                hover_color="#1E3A8A",
+                text_color="#60A5FA",
+                command=lambda u=entry.url, t=entry.title: self._install_pwa_shortcut(u, t)
+            )
+            install_btn.pack(side="right", padx=(4, 2))
+
             # Botón para eliminar del historial
             del_btn = ctk.CTkButton(
                 item_frame,
                 text="✕",
-                width=28,
-                height=28,
+                width=26,
+                height=26,
                 font=("Segoe UI", 11),
                 fg_color="transparent",
                 hover_color="#EF4444",
                 text_color=TEXT_SECONDARY,
                 command=lambda u=entry.url: self._remove_from_history(u)
             )
-            del_btn.pack(side="right", padx=(4, 0))
+            del_btn.pack(side="right", padx=(2, 0))
+
+    def _install_pwa_shortcut(self, url: str, title: str):
+        """Crea un acceso directo .lnk o script en el escritorio para lanzar la página como PWA independiente."""
+        try:
+            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+            clean_title = "".join(c for c in (title or urlparse(url).netloc) if c.isalnum() or c in (' ', '_', '-')).strip()
+            if not clean_title:
+                clean_title = "PWA"
+
+            vbs_path = os.path.join(desktop, f"{clean_title}.vbs")
+            python_exe = sys.executable
+            main_py = os.path.abspath(os.path.join(os.path.dirname(__file__), "main.py"))
+
+            # Crear VBS launcher silencioso en el escritorio que abre la URL directamente en PWA Simulator
+            vbs_content = f'CreateObject("WScript.Shell").Run "\"{python_exe}\" \"{main_py}\" \"{url}\"", 0, False'
+            with open(vbs_path, "w", encoding="utf-8") as f:
+                f.write(vbs_content)
+
+            self.status_label.configure(
+                text=f"✓ Acceso PWA '{clean_title}.vbs' creado en tu Escritorio",
+                text_color=SUCCESS_COLOR
+            )
+        except Exception as e:
+            self._show_error(f"Error al crear acceso directo: {e}")
 
     def _remove_from_history(self, url: str):
         remove_entry(url)
