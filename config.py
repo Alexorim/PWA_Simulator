@@ -6,19 +6,20 @@ APP_VERSION = "1.0.0"
 APP_ID = "alejandro.herramientas.pwasimulator.v1"
 
 # Window dimensions
-WINDOW_WIDTH = 900
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 960
+WINDOW_HEIGHT = 700
 WEBVIEW_WIDTH = 1024
 WEBVIEW_HEIGHT = 768
 
-# Colors
-BG_COLOR = "#0D0D0D"
-BG_SECONDARY = "#1A1A1A"
-BG_TERTIARY = "#2A2A2A"
-ACCENT_COLOR = "#3B82F6"
-ACCENT_HOVER = "#2563EB"
-TEXT_COLOR = "#FFFFFF"
-TEXT_SECONDARY = "#9CA3AF"
+# Colors (Modern Deep Navy / Glassmorphic)
+BG_COLOR = "#0C0E14"
+BG_SECONDARY = "#121520"
+BG_TERTIARY = "#181D2A"
+BORDER_COLOR = "#222738"
+ACCENT_COLOR = "#0284C7"
+ACCENT_HOVER = "#0369A1"
+TEXT_COLOR = "#F8FAFC"
+TEXT_SECONDARY = "#94A3B8"
 ERROR_COLOR = "#EF4444"
 SUCCESS_COLOR = "#22C55E"
 WARNING_COLOR = "#F59E0B"
@@ -32,7 +33,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 ICON_CACHE_DIR = os.path.join(tempfile.gettempdir(), "pwa_simulator", "icons")
 HISTORY_FILE = os.path.join(BASE_DIR, "history.json")
+PROFILE_DIR = os.path.join(BASE_DIR, "browser_profile")
+URLS_DIR = os.path.join(BASE_DIR, "URLS")
 MAX_HISTORY = 10
 
-# Ensure cache directory exists
+# Ensure directories exist
 os.makedirs(ICON_CACHE_DIR, exist_ok=True)
+os.makedirs(PROFILE_DIR, exist_ok=True)
+os.makedirs(URLS_DIR, exist_ok=True)

@@ -5,6 +5,7 @@ __pycache__/
 *.spec
 dist/
 build/
+PWASimulator_Portable/
 *.egg-info/
 .venv/
 venv/
@@ -12,6 +13,7 @@ ENV/
 
 # Usuario / Local
 history.json
+browser_profile/
 *.lnk
 *.log
 
